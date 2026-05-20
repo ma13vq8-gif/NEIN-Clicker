@@ -1,7 +1,4 @@
-# Writing the content of the README.md based on the provided cut-off code.
-# The user wants a clean, comprehensive README for "NEIN Clicker Basic" or "NEIN-Clicker".
-
-readme_content = """# 🛑 NEIN Clicker Basic
+# 🛑 NEIN Clicker Basic
 
 An industrial-themed, high-performance incremental clicker game built from scratch using premium web technologies (HTML5, CSS Grid/Variables, and Vanilla JavaScript ES6). Defy the system, stack up denials, and unlock a deeply structural tier of automated generators, click modifiers, and complex achievement paths.
 
