@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEIN Clicker Ultimate</title>
+    <style>
+        :root {
+            --bg-color: #08090c;
+            --panel-bg: #12141c;
+            --accent-color: #ff3e3e;
+            --accent-glow: rgba(255, 62, 62, 0.4);
+            --text-main: #f0f2f5;
+            --text-muted: #7e8494;
+            --nordic-blue: #00d2ff;
+            --gold: #ffd700;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Core Game Container */
+        .game-container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            width: 100%;
+            max-width: calc(100% - 440px);
+            height: 100%;
+            padding: 20px;
+            position: relative;
+            gap: 15px;
+            z-index: 1;
+            transition: max-width 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Top Bar Info */
+        .header {
+            text-align: center;
+            background: linear-gradient(180deg, rgba(22,25,32,0.8) 0%, rgba(22,25,32,0) 100%);
+            padding: 15px 10px;
+            border-radius: 12px;
+        }
+
+        .score-container {
+            font-size: 3.8rem;
+            font-weight: 900;
+            color: var(--text-main);
+            text-shadow: 0 0 25px var(--accent-glow);
+            letter-spacing: -1px;
+            line-height: 1;
+            word-break: break-all;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .nps-container { color: var(--text-muted); }
+        .mult-container { color: var(--nordic-blue); }
+
+        /* Main Clicker Core */
+        .click-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .nein-button {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #2e0808 0%, #110202 100%);
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 0 40px var(--accent-glow), inset 0 0 25px rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.05s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            z-index: 5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nein-button:active {
+            transform: scale(0.92);
+        }
+
+        .nein-text {
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--accent-color);
+            text-shadow: 0 0 15px var(--accent-glow);
+            letter-spacing: 1px;
+        }
+
+        /* Particle / Pop Text Mechanics */
+        .floating-text {
+            position: absolute;
+            font-size: 2.2rem;
+            font-weight: 900;
+            pointer-events: none;
+            animation: floatUpUp 0.55s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            z-index: 10;
+        }
+
+        @keyframes floatUpUp {
+            0% { opacity: 1; transform: translateY(0) scale(1.2) rotate(-5deg); }
+            100% { opacity: 0; transform: translateY(-120px) scale(0.8) rotate(10deg); }
+        }
+
+        /* Sliding Tabbed Sidebar System Menu Panel */
+        .menu-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 440px;
+            background-color: var(--panel-bg);
+            border-left: 1px solid #1f2330;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.6);
+            overflow: hidden;
+            z-index: 50;
+            transform: translateX(0);
+            transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .menu-panel.hidden {
+            transform: translateX(100%);
+        }
+
+        /* Side Toggle Menu Button */
+        .side-open-btn {
+            position: fixed;
+            right: 440px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: var(--panel-bg);
+            border: 1px solid #1f2330;
+            border-right: none;
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 15px 12px;
+            cursor: pointer;
+            border-top-left-radius: 10px;
+            border-bottom-left-radius: 10px;
+            z-index: 51;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+            writing-mode: vertical-rl;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: right 0.35s cubic-bezier(0.25, 1, 0.5, 1), color 0.2s;
+        }
+        
+        .side-open-btn:hover {
+            color: var(--accent-color);
+        }
+
+        .menu-panel.hidden + .side-open-btn {
+            right: 0;
+        }
+
+        /* Navigation Systems within Menu */
+        .tab-bar {
+            display: flex;
+            background-color: #171a24;
+            border-bottom: 1px solid #232836;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 16px 8px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tab-btn.active {
+            color: var(--text-main);
+            background-color: var(--panel-bg);
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .tab-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Modular Store Item Designs */
+        .shop-item {
+            background-color: #191d29;
+            border: 1px solid #252b3d;
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.15s;
+        }
+
+        .shop-item:hover { background-color: #202536; }
+        .shop-item:active { transform: scale(0.99); }
+        .shop-item.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .item-details h4 {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .item-details p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .item-cost {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            background: rgba(255, 62, 62, 0.1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 62, 62, 0.2);
+        }
+
+        /* Achievements Styling updates */
+        .ach-item {
+            background: linear-gradient(90deg, #131722 0%, #191e2b 100%);
+            border: 1px solid #22293a;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0.35;
+            transition: opacity 0.3s ease;
+        }
+        .ach-item.unlocked {
+            opacity: 1;
+            border-color: var(--gold);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+        }
+        .ach-icon { font-size: 1.5rem; }
+        .ach-info h5 { font-size: 0.88rem; color: var(--text-main); }
+        .ach-info p { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Settings Components Panel */
+        .settings-group {
+            background-color: #191d29;
+            border: 1px solid #252b3d;
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .settings-info h4 {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+        .settings-info p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #2c3245;
+            transition: .3s;
+            border-radius: 26px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* Floating Pupper Widget Layout Component */
+        .pupper-widget {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background-color: #171a24;
+            border: 2px solid var(--nordic-blue);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: move;
+            z-index: 100;
+            touch-action: none;
+        }
+
+        .pupper-icon {
+            width: 24px;
+            height: 24px;
+            fill: var(--nordic-blue);
+            pointer-events: none;
+        }
+
+        /* Responsive Viewport Layout Switch adjustments */
+        @media (max-width: 768px) {
+            body {
+                justify-content: center;
+            }
+            .game-container {
+                max-width: 100%;
+            }
+            .menu-panel {
+                top: auto;
+                bottom: 0;
+                left: 0;
+                width: 100vw;
+                height: 340px;
+                border-left: none;
+                border-top: 1px solid #1f2330;
+                transform: translateY(0);
+                box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+            }
+            .menu-panel.hidden {
+                transform: translateY(100%);
+            }
+            .side-open-btn {
+                display: none;
+            }
+            .pupper-widget { display: flex; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container" id="game-frame">
+        <!-- Telemetry Frame -->
+        <div class="header">
+            <div class="score-container" id="score">0</div>
+            <div class="stats-row">
+                <span class="nps-container" id="nps">NPS: 0</span>
+                <span class="mult-container" id="click-mult">Click: +1</span>
+            </div>
+        </div>
+
+        <!-- Engine Click Target -->
+        <div class="click-area">
+            <button class="nein-button" id="nein-btn">
+                <span class="nein-text">NEIN</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Extended Configuration System Menu Panel -->
+    <div class="menu-panel" id="ui-panel">
+        <div class="tab-bar">
+            <button class="tab-btn active" id="btn-upgrades" onclick="switchTab('upgrades')">Upgrades</button>
+            <button class="tab-btn" id="btn-gear" onclick="switchTab('gear')">Click Mod</button>
+            <button class="tab-btn" id="btn-achievements" onclick="switchTab('achievements')">Trophies</button>
+            <button class="tab-btn" id="btn-settings" onclick="switchTab('settings')">Settings</button>
+        </div>
+
+        <!-- Tab 1: Automated Generators -->
+        <div class="tab-content active" id="tab-upgrades"></div>
+
+        <!-- Tab 2: Clicking Multipliers -->
+        <div class="tab-content" id="tab-gear"></div>
+
+        <!-- Tab 3: Achievement Metrics Tracker -->
+        <div class="tab-content" id="tab-achievements"></div>
+
+        <!-- Tab 4: System Parameters Settings -->
+        <div class="tab-content" id="tab-settings">
+            <div class="settings-group">
+                <div class="settings-info">
+                    <h4>Raw Numerical Values</h4>
+                    <p>Display full numbers without text shortcuts</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-full-numbers" onchange="toggleFullNumbers(this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Edge Slide Button Toggle Component -->
+    <button class="side-open-btn" id="side-toggle-btn">☰ Shop</button>
+
+    <!-- Mobile UI Control Widget -->
+    <div class="pupper-widget" id="pupper">
+        <svg class="pupper-icon" viewBox="0 0 24 24">
+            <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+        </svg>
+    </div>
+
+    <script>
+        // Internal Game Systems Registry Object Data Setup
+        const state = {
+            neins: 0,
+            totalNeinsEarned: 0,
+            nps: 0,
+            clickValue: 1,
+            manualClicks: 0,
+            clicksThisSecond: 0,
+            highestCPS: 0,
+            settings: {
+                showFullNumbers: false
+            },
+            upgrades: [
+                { id: 'u1', name: 'Auto-Neiner', cost: 15, baseCost: 15, cps: 0.2, count: 0 },
+                { id: 'u2', name: 'Echoing Denials', cost: 100, baseCost: 100, cps: 1.5, count: 0 },
+                { id: 'u3', name: 'Megaphone Defiance', cost: 1100, baseCost: 1100, cps: 12, count: 0 },
+                { id: 'u4', name: 'The NEIN Grid', cost: 14000, baseCost: 14000, cps: 85, count: 0 },
+                { id: 'u5', name: 'Quantum Refusal Core', cost: 175000, baseCost: 175000, cps: 640, count: 0 },
+                { id: 'u6', name: 'Galactic Veto Array', cost: 2500000, baseCost: 2500000, cps: 4200, count: 0 },
+                { id: 'u7', name: 'Universal Reality Denier', cost: 45000000, baseCost: 45000000, cps: 36000, count: 0 }
+            ],
+            gear: [
+                { id: 'g1', name: 'Heavy Strike Iron', cost: 50, baseCost: 50, addClick: 1, count: 0 },
+                { id: 'g2', name: 'Hyper-Thumping Piston', cost: 450, baseCost: 450, addClick: 5, count: 0 },
+                { id: 'g3', name: 'Kinetic Shock Trigger', cost: 3200, baseCost: 3200, addClick: 25, count: 0 },
+                { id: 'g4', name: 'Absolute Veto Driver', cost: 28000, baseCost: 28000, addClick: 150, count: 0 },
+                { id: 'g5', name: 'Continental Fracture Hammer', cost: 400000, baseCost: 400000, addClick: 1200, count: 0 },
+                { id: 'g6', name: 'Dimension Shattering Strike', cost: 9500000, baseCost: 9500000, addClick: 9000, count: 0 }
+            ],
+            achievements: [
+                // --- Core Accumulation Milestones Track ---
+                { id: 'a1', type: 'accum', name: 'First Rejection', desc: 'Click NEIN 1 time', req: 1, unlocked: false, icon: '🛑' },
+                { id: 'a2', type: 'accum', name: 'Stubborn Mind', desc: 'Accumulate 10,000 Total NEINs', req: 10000, unlocked: false, icon: '🔥' },
+                { id: 'a3', type: 'accum', name: 'The Overseer', desc: 'Accumulate 1,000,000 Total NEINs', req: 1000000, unlocked: false, icon: '👑' },
+                { id: 'a4', type: 'accum', name: 'Cosmic Objection', desc: 'Accumulate 100,000,000 Total NEINs', req: 100000000, unlocked: false, icon: '🪐' },
+                { id: 'a5', type: 'accum', name: 'Reality Glitch', desc: 'Accumulate 5,000,000,000 Total NEINs', req: 5000000000, unlocked: false, icon: '👾' },
+                { id: 'a6', type: 'accum', name: 'Infinite Paradox', desc: 'Accumulate 100,000,000,000 Total NEINs', req: 100000000000, unlocked: false, icon: '♾️' },
+                { id: 'a7', type: 'accum', name: 'NEIN Overlord', desc: 'Accumulate 1,000,000,000,000 Total NEINs', req: 1000000000000, unlocked: false, icon: '🖤' },
+
+                // --- Strategic Interactive Challenges Track ---
+                { id: 'c1', type: 'challenge', name: 'Finger Burner', desc: 'Click manually 12 times in a single second', unlocked: false, icon: '⚡' },
+                { id: 'c2', type: 'challenge', name: 'True Purist', desc: 'Reach 500 NEINs without buying automated Upgrades', unlocked: false, icon: '🌱' },
+                { id: 'c3', type: 'challenge', name: 'Hoarder Mentality', desc: 'Hold 15,000 unspent NEINs in your bank simultaneously', unlocked: false, icon: '🏦' },
+                { id: 'c4', type: 'challenge', name: 'Symmetrical Power', desc: 'Own exactly equal amounts of Auto-Neiners and Echoing Denials (Min: 5)', unlocked: false, icon: '⚖️' },
+                { id: 'c5', type: 'challenge', name: 'The Golden Mean', desc: 'Have click power exactly equal to your total NPS output', unlocked: false, icon: '🎯' },
+                { id: 'c6', type: 'challenge', name: 'Broke Billionaire', desc: 'Have under 10 NEINs left in bank while your NPS is over 1,000', unlocked: false, icon: '💸' },
+                { id: 'c7', type: 'challenge', name: 'Leap of Faith', desc: 'Buy any tier upgrade when it costs over 80% of your bank total', unlocked: false, icon: '🦅' },
+                { id: 'c8', type: 'challenge', name: 'Hyper Drive', desc: 'Maintain 8+ clicks per second for 5 consecutive seconds', unlocked: false, icon: '🔥' },
+                { id: 'c9', type: 'challenge', name: 'Lucky Strike', desc: 'Click the button manually when your current balance ends in exactly 7', unlocked: false, icon: '🎰' },
+                { id: 'c10', type: 'challenge', name: 'Automated Overlord', desc: 'Reach over 10,000 NPS without purchasing a single Click Mod', unlocked: false, icon: '🤖' },
+                { id: 'c11', type: 'challenge', name: 'Perfect Stack', desc: 'Own exactly 10 of any single asset type', unlocked: false, icon: '📦' },
+                { id: 'c12', type: 'challenge', name: 'Speed Runner', desc: 'Reach 10,000 Total Earned with under 200 manual clicks', unlocked: false, icon: '⏱️' }
+            ]
+        };
+
+        // UI Document Nodes Mapping
+        const scoreEl = document.getElementById('score');
+        const npsEl = document.getElementById('nps');
+        const clickMultEl = document.getElementById('click-mult');
+        const neinBtn = document.getElementById('nein-btn');
+        const uiPanel = document.getElementById('ui-panel');
+        const gameFrame = document.getElementById('game-frame');
+        const sideToggleBtn = document.getElementById('side-toggle-btn');
+        const pupper = document.getElementById('pupper');
+        const toggleFullNumbersEl = document.getElementById('toggle-full-numbers');
+
+        // Secret achievement state helpers
+        let menuToggleTimestamps = [];
+
+        // LocalStorage Save System
+        function saveGame() {
+            localStorage.setItem('neinClicker_save', JSON.stringify({
+                neins: state.neins,
+                totalNeinsEarned: state.totalNeinsEarned,
+                manualClicks: state.manualClicks,
+                settings: state.settings,
+                upgrades: state.upgrades.map(u => ({ id: u.id, count: u.count, cost: u.cost })),
+                gear: state.gear.map(g => ({ id: g.id, count: g.count, cost: g.cost })),
+                achievements: state.achievements.map(a => ({ id: a.id, unlocked: a.unlocked }))
+            }));
+        }
+
+        // Load game data securely
+        function loadGame() {
+            const raw = localStorage.getItem('neinClicker_save');
+            if (!raw) return;
+            try {
+                const data = JSON.parse(raw);
+                state.neins = data.neins || 0;
+                state.totalNeinsEarned = data.totalNeinsEarned || 0;
+                state.manualClicks = data.manualClicks || 0;
+                
+                if (data.settings) {
+                    state.settings = { ...state.settings, ...data.settings };
+                    if (toggleFullNumbersEl) {
+                        toggleFullNumbersEl.checked = !!state.settings.showFullNumbers;
+                    }
+                }
+                
+                if (data.upgrades) {
+                    data.upgrades.forEach(saved => {
+                        const match = state.upgrades.find(u => u.id === saved.id);
+                        if (match) { match.count = saved.count; match.cost = saved.cost; }
+                    });
+                }
+                if (data.gear) {
+                    data.gear.forEach(saved => {
+                        const match = state.gear.find(g => g.id === saved.id);
+                        if (match) { match.count = saved.count; match.cost = saved.cost; }
+                    });
+                }
+                if (data.achievements) {
+                    data.achievements.forEach(saved => {
+                        const match = state.achievements.find(a => a.id === saved.id);
+                        if (match) match.unlocked = saved.unlocked;
+                    });
+                }
+            } catch (e) {
+                console.error("Failed parsing saved save-game data", e);
+            }
+        }
+
+        // Dynamic Abbreviation Formatter Engine
+        function formatVal(num) {
+            if (state.settings.showFullNumbers) {
+                return Math.floor(num).toLocaleString();
+            }
+            if (num >= 1000000000000) return (num / 1000000000000).toFixed(2) + 'T';
+            if (num >= 1000000000) return (num / 1000000000).toFixed(2) + 'B';
+            if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return Math.floor(num);
+        }
+
+        // Handle settings mutation
+        function toggleFullNumbers(isChecked) {
+            state.settings.showFullNumbers = isChecked;
+            updateUI();
+            saveGame();
+        }
+
+        // Tab Switching Engine
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.getElementById(`btn-${tabName}`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        // Framework DOM Generator
+        function buildShopDOM() {
+            const upgTab = document.getElementById('tab-upgrades');
+            upgTab.innerHTML = '';
+            state.upgrades.forEach(upg => {
+                const item = document.createElement('div');
+                item.className = 'shop-item';
+                item.id = `shop-item-${upg.id}`;
+                item.onclick = () => buyUpgrade('upgrades', upg.id);
+                item.innerHTML = `
+                    <div class="item-details">
+                        <h4 id="title-${upg.id}">${upg.name} (${upg.count})</h4>
+                        <p>+${upg.cps} NPS each</p>
+                    </div>
+                    <div class="item-cost" id="cost-${upg.id}">${formatVal(upg.cost)}</div>
+                `;
+                upgTab.appendChild(item);
+            });
+
+            const gearTab = document.getElementById('tab-gear');
+            gearTab.innerHTML = '';
+            state.gear.forEach(g => {
+                const item = document.createElement('div');
+                item.className = 'shop-item';
+                item.id = `shop-item-${g.id}`;
+                item.onclick = () => buyUpgrade('gear', g.id);
+                item.innerHTML = `
+                    <div class="item-details">
+                        <h4 id="title-${g.id}">${g.name} (${g.count})</h4>
+                        <p>+${g.addClick} Click Power</p>
+                    </div>
+                    <div class="item-cost" id="cost-${g.id}">${formatVal(g.cost)}</div>
+                `;
+                gearTab.appendChild(item);
+            });
+
+            const achTab = document.getElementById('tab-achievements');
+            achTab.innerHTML = '';
+            state.achievements.forEach(ach => {
+                const item = document.createElement('div');
+                item.className = `ach-item ${ach.unlocked ? 'unlocked' : ''}`;
+                item.id = `ach-item-${ach.id}`;
+                item.innerHTML = `
+                    <div class="ach-icon">${ach.icon}</div>
+                    <div class="ach-info">
+                        <h5>${ach.name}</h5>
+                        <p>${ach.desc}</p>
+                    </div>
+                `;
+                achTab.appendChild(item);
+            });
+        }
+
+        // Core Render Processing Step Engine
+        function updateUI() {
+            scoreEl.textContent = formatVal(state.neins);
+            npsEl.textContent = `NPS: ${state.nps.toFixed(1)}`;
+            clickMultEl.textContent = `Click: +${formatVal(state.clickValue)}`;
+            
+            checkAchievements();
+
+            state.upgrades.forEach(upg => {
+                const el = document.getElementById(`shop-item-${upg.id}`);
+                if (el) {
+                    if (state.neins < upg.cost) el.classList.add('disabled');
+                    else el.classList.remove('disabled');
+                    document.getElementById(`title-${upg.id}`).textContent = `${upg.name} (${upg.count})`;
+                    document.getElementById(`cost-${upg.id}`).textContent = formatVal(upg.cost);
+                }
+            });
+
+            state.gear.forEach(g => {
+                const el = document.getElementById(`shop-item-${g.id}`);
+                if (el) {
+                    if (state.neins < g.cost) el.classList.add('disabled');
+                    else el.classList.remove('disabled');
+                    document.getElementById(`title-${g.id}`).textContent = `${g.name} (${g.count})`;
+                    document.getElementById(`cost-${g.id}`).textContent = formatVal(g.cost);
+                }
+            });
+
+            state.achievements.forEach(ach => {
+                const el = document.getElementById(`ach-item-${ach.id}`);
+                if (el && ach.unlocked) {
+                    el.classList.add('unlocked');
+                }
+            });
+        }
+
+        // Logic Purchase Execution with interactive trigger checks
+        function buyUpgrade(type, id) {
+            const list = state[type];
+            const item = list.find(x => x.id === id);
+            if (state.neins >= item.cost) {
+                // Challenge Check: Leap of Faith (c7)
+                if (item.cost >= state.neins * 0.8) {
+                    unlockAchievement('c7');
+                }
+
+                state.neins -= item.cost;
+                item.count++;
+                item.cost = Math.floor(item.baseCost * Math.pow(1.12, item.count));
+                
+                recalculateStats();
+                updateUI();
+            }
+        }
+
+        function recalculateStats() {
+            state.nps = state.upgrades.reduce((acc, curr) => acc + (curr.count * curr.cps), 0);
+            state.clickValue = 1 + state.gear.reduce((acc, curr) => acc + (curr.count * curr.addClick), 0);
+        }
+
+        // Dedicated Achievement Evaluator Logic Panel
+        function checkAchievements() {
+            const totalUpgrades = state.upgrades.reduce((a, b) => a + b.count, 0);
+            const totalGear = state.gear.reduce((a, b) => a + b.count, 0);
+
+            state.achievements.forEach(ach => {
+                // Handle standard accumulation rules
+                if (ach.type === 'accum' && !ach.unlocked && state.totalNeinsEarned >= ach.req) {
+                    unlockAchievement(ach.id);
+                }
+            });
+
+            // c2: True Purist
+            if (state.neins >= 500 && totalUpgrades === 0) unlockAchievement('c2');
+            
+            // c3: Hoarder Mentality
+            if (state.neins >= 15000) unlockAchievement('c3');
+
+            // c4: Symmetrical Power
+            const u1 = state.upgrades.find(u => u.id === 'u1').count;
+            const u2 = state.upgrades.find(u => u.id === 'u2').count;
+            if (u1 >= 5 && u1 === u2) unlockAchievement('c4');
+
+            // c5: The Golden Mean
+            if (state.nps > 0 && state.clickValue === state.nps) unlockAchievement('c5');
+
+            // c6: Broke Billionaire
+            if (state.neins < 10 && state.nps >= 1000) unlockAchievement('c6');
+
+            // c10: Automated Overlord
+            if (state.nps >= 10000 && totalGear === 0) unlockAchievement('c10');
+
+            // c11: Perfect Stack
+            if (state.upgrades.some(u => u.count === 10) || state.gear.some(g => g.count === 10)) {
+                unlockAchievement('c11');
+            }
+
+            // c12: Speed Runner
+            if (state.totalNeinsEarned >= 10000 && state.manualClicks < 200) unlockAchievement('c12');
+        }
+
+        function unlockAchievement(id) {
+            const ach = state.achievements.find(a => a.id === id);
+            if (ach && !ach.unlocked) {
+                ach.unlocked = true;
+                const el = document.getElementById(`ach-item-${id}`);
+                if (el) el.classList.add('unlocked');
+            }
+        }
+
+        // Interface Click Execution Loop
+        function executeClick(e) {
+            e.preventDefault();
+            state.neins += state.clickValue;
+            state.totalNeinsEarned += state.clickValue;
+            state.manualClicks++;
+            state.clicksThisSecond++;
+
+            // Challenge Check: Lucky Strike (c9)
+            if (Math.floor(state.neins) % 10 === 7) {
+                unlockAchievement('c9');
+            }
+            
+            let clientX, clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            spawnPopText(clientX, clientY);
+            updateUI();
+        }
+
+        function spawnPopText(x, y) {
+            const el = document.createElement('div');
+            el.className = 'floating-text';
+            el.textContent = Math.random() > 0.85 ? 'NEIN!' : `+${formatVal(state.clickValue)}`;
+            el.style.color = el.textContent === 'NEIN!' ? 'var(--gold)' : 'var(--accent-color)';
+            el.style.left = `${x - 25}px`;
+            el.style.top = `${y - 25}px`;
+            
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 550);
+        }
+
+        // Input Monitor Configurations
+        neinBtn.addEventListener('touchstart', executeClick, { passive: false });
+        neinBtn.addEventListener('mousedown', (e) => {
+            if ('ontouchstart' in window) return;
+            executeClick(e);
+        });
+
+        // 1-Second Sampling Loop (For CPS challenge calculation tracking mechanics)
+        let consecutiveHighCpsSeconds = 0;
+        setInterval(() => {
+            // Check c1: Finger Burner
+            if (state.clicksThisSecond >= 12) {
+                unlockAchievement('c1');
+            }
+
+            // Check c8: Hyper Drive
+            if (state.clicksThisSecond >= 8) {
+                consecutiveHighCpsSeconds++;
+                if (consecutiveHighCpsSeconds >= 5) {
+                    unlockAchievement('c8');
+                }
+            } else {
+                consecutiveHighCpsSeconds = 0;
+            }
+
+            state.clicksThisSecond = 0;
+        }, 1000);
+
+        // Run Steady Heartbeat Frame Loops (100ms)
+        setInterval(() => {
+            if (state.nps > 0) {
+                const frameGain = state.nps / 10;
+                state.neins += frameGain;
+                state.totalNeinsEarned += frameGain;
+                updateUI();
+            }
+        }, 100);
+
+        // Auto Save Interval Loop
+        setInterval(saveGame, 5000);
+
+        // --- View Slide Open Handling Managers ---
+        function toggleSidebar() {
+            uiPanel.classList.toggle('hidden');
+            
+            if (window.innerWidth > 768) {
+                if (uiPanel.classList.contains('hidden')) {
+                    gameFrame.style.maxWidth = '100%';
+                } else {
+                    gameFrame.style.maxWidth = 'calc(100% - 440px)';
+                }
+            }
+        }
+
+        // Sidebar open toggle clicks
+        sideToggleBtn.addEventListener('click', toggleSidebar);
+
+        // Desktop Toggle Key Trigger Event
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'g') {
+                toggleSidebar();
+            }
+        });
+
+        // Mobile Pupper Tap Controller Trigger
+        pupper.addEventListener('click', () => {
+            if (isDraggingPupper) return;
+            toggleSidebar();
+        });
+
+        // --- Setup Draggable Boundaries Physics for Pupper Mobile Widget ---
+        let isDraggingPupper = false;
+        let startX, startY, initialX, initialY;
+
+        function dragStart(e) {
+            isDraggingPupper = false;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            startX = clientX;
+            startY = clientY;
+            
+            const rect = pupper.getBoundingClientRect();
+            initialX = rect.left;
+            initialY = rect.top;
+            
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('touchmove', dragMove, { passive: false });
+            document.addEventListener('mouseup', dragEnd);
+            document.addEventListener('touchend', dragEnd);
+        }
+
+        function dragMove(e) {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const dx = clientX - startX;
+            const dy = clientY - startY;
+            
+            if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+                isDraggingPupper = true;
+            }
+            
+            if (isDraggingPupper) {
+                if(e.cancelable) e.preventDefault();
+                pupper.style.left = `${initialX + dx}px`;
+                pupper.style.top = `${initialY + dy}px`;
+                pupper.style.bottom = 'auto';
+                pupper.style.right = 'auto';
+            }
+        }
+
+        function dragEnd() {
+            document.removeEventListener('mousemove', dragMove);
+            document.removeEventListener('touchmove', dragMove);
+            document.removeEventListener('mouseup', dragEnd);
+            document.removeEventListener('touchend', dragEnd);
+        }
+
+        pupper.addEventListener('mousedown', dragStart);
+        pupper.addEventListener('touchstart', dragStart, { passive: true });
+
+        // Initial Runtime Ignition
+        loadGame();
+        recalculateStats();
+        buildShopDOM();
+        updateUI();
+    </script>
+</body>
+</html>
